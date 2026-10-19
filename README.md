@@ -2,6 +2,10 @@
 
 The parts of the [WeakAuras](https://github.com/WeakAuras/WeakAuras2) World of Warcraft addon that work outside the game, ported from Lua to TypeScript. It has no runtime dependencies and runs in browsers and Node 18+.
 
+![The demo: five cooldown icons in a centred row, sorted soonest-ready first. The two under 3 seconds glow orange from a condition. A config panel with undo and redo sits on the right, and an export string and the condition log sit below.](docs/demo.png)
+
+*The demo (`npm run demo`): a trigger fills a state map, and each state becomes an icon that slides in. A condition turns icons orange under 3 seconds, at the exact moment rather than by polling. The group re-sorts and lays out its icons, and every config edit is undoable and exports as one short string. The format options on the right are generated from the formatter schema.*
+
 The port was made from WeakAuras2 commit `bedea0f` (2026-10-18). WeakAuras is GPL-2.0, and so is this port: see [LICENSE](LICENSE). A project that copies this code must be GPL-2.0 too. Re-implementing the ideas yourself has no such condition.
 
 ```bash
