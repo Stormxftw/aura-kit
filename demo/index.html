@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Aura Kit Demo</title>
+    <style>
+      :root {
+        --bg: #f6f5f2;
+        --panel: #ffffff;
+        --ink: #1d1d1f;
+        --muted: #6b6b70;
+        --line: #e3e1dc;
+        --accent: #3a6df0;
+        --warn: #d9480f;
+        --stage: #15171c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121316;
+          --panel: #1b1d22;
+          --ink: #ececef;
+          --muted: #9a9aa3;
+          --line: #2c2f36;
+          --accent: #7aa2ff;
+          --warn: #ff8a5c;
+          --stage: #0b0c0f;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+      }
+      main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+      h1 { font-size: 22px; margin: 0 0 4px; }
+      .sub { color: var(--muted); margin: 0 0 20px; }
+      .grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+      @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+      .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+      .panel h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 10px; }
+      .stage {
+        position: relative; height: 300px; background: var(--stage); border-radius: 8px; overflow: hidden;
+        background-image: radial-gradient(circle at center, #ffffff10 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+      .anchor { position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; margin: -3px; border-radius: 50%; background: #ffffff40; }
+      .slot { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; transition: left .25s ease, top .25s ease; }
+      .icon {
+        --aura-color: rgba(255,255,255,1);
+        position: relative; width: 100%; height: 100%; border-radius: 10px;
+        display: grid; place-items: center; font-size: 26px;
+        background: #2a2d35; border: 2px solid var(--aura-color); box-shadow: 0 0 0 0 transparent;
+        transition: border-color .15s, box-shadow .15s;
+        overflow: hidden;
+      }
+      .icon.glow { box-shadow: 0 0 14px 2px var(--warn); }
+      .icon .sweep {
+        position: absolute; inset: 0;
+        background: conic-gradient(#000a calc(var(--p, 0) * 1turn), transparent 0);
+      }
+      .icon .emoji { position: relative; }
+      .icon .label {
+        position: absolute; bottom: 2px; left: 0; right: 0; text-align: center;
+        font: 600 12px/1 ui-monospace, Consolas, monospace; color: #fff; text-shadow: 0 1px 2px #000;
+      }
+      .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+      button, select, input, textarea {
+        font: inherit; color: var(--ink); background: var(--panel);
+        border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px;
+      }
+      button { cursor: pointer; }
+      button:hover:not(:disabled) { border-color: var(--accent); }
+      button:disabled { opacity: .45; cursor: default; }
+      button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      label.row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 0; }
+      label.row > span { color: var(--muted); }
+      .fmt { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 8px; }
+      .fmt code { color: var(--accent); }
+      textarea { width: 100%; height: 72px; resize: vertical; font: 12px/1.4 ui-monospace, Consolas, monospace; }
+      .note { color: var(--muted); font-size: 12px; margin: 6px 0 0; min-height: 1.2em; }
+      .note.err { color: var(--warn); }
+      .log { font: 12px/1.5 ui-monospace, Consolas, monospace; color: var(--muted); max-height: 120px; overflow: auto; margin: 0; }
+      .history { display: flex; gap: 8px; align-items: center; }
+      .history .note { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Aura Kit</h1>
+      <p class="sub">WeakAuras patterns running in a browser. Press an ability to start its cooldown.</p>
+      <div class="grid">
+        <section class="panel">
+          <h2>Display</h2>
+          <div class="stage" id="stage"><div class="anchor"></div></div>
+          <div class="buttons" id="abilities"></div>
+          <p class="note" id="ticker"></p>
+        </section>
+        <section class="panel">
+          <h2>Config</h2>
+          <div class="history">
+            <button id="undo">Undo</button>
+            <button id="redo">Redo</button>
+            <p class="note" id="historyNote"></p>
+          </div>
+          <label class="row"><span>Layout</span>
+            <select id="layout">
+              <option value="HORIZONTAL">Centred row</option>
+              <option value="RIGHT">Grow right</option>
+              <option value="DOWN">Grow down</option>
+              <option value="CIRCLE">Circle</option>
+              <option value="GRID">Grid</option>
+            </select>
+          </label>
+          <label class="row"><span>Sort</span>
+            <select id="sort">
+              <option value="ascending">Soonest ready first</option>
+              <option value="descending">Latest ready first</option>
+              <option value="none">Config order</option>
+            </select>
+          </label>
+          <label class="row"><span>Spacing</span><input id="space" type="range" min="0" max="40" /></label>
+          <label class="row"><span>Warn under (s)</span><input id="warnAt" type="number" min="0" max="20" step="0.5" style="width:80px" /></label>
+          <label class="row"><span>Text</span><input id="template" style="width:150px" /></label>
+          <div id="formatters"></div>
+        </section>
+        <section class="panel">
+          <h2>Share</h2>
+          <div class="buttons" style="margin-top:0">
+            <button class="primary" id="export">Export</button>
+            <button id="import">Import</button>
+            <button id="legacy">Load a v1 string</button>
+          </div>
+          <textarea id="share" spellcheck="false" placeholder="Export string appears here. Paste one to import."></textarea>
+          <p class="note" id="shareNote"></p>
+        </section>
+        <section class="panel">
+          <h2>Condition log</h2>
+          <pre class="log" id="log"></pre>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
